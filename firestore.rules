@@ -1,0 +1,31 @@
+rules_version = '2';
+// Security rules for the Shop Stock app. Paste this into Firebase console → Firestore Database → Rules → Publish.
+// Only the shop owner can see costs, suppliers, sales and profit (priv/ and everyone's ledger in led/).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function shop() { return get(/databases/$(database)/documents/config/shop).data; }
+    function hasShop() { return exists(/databases/$(database)/documents/config/shop); }
+    function isOwner() { return signedIn() && hasShop() && shop().owner == request.auth.uid; }
+    function isStaff() { return signedIn() && hasShop() && request.auth.uid in shop().get('staff', []); }
+    function member() { return isOwner() || isStaff(); }
+
+    match /config/shop {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.owner == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /products/{id} { allow read, write: if member(); }
+    match /imgs/{id}     { allow read, write: if member(); }
+    match /locks/{id}    { allow read, write: if member(); }
+    match /priv/{id}     { allow read, write: if isOwner(); }
+    match /led/{uid} {
+      allow read, write: if isOwner() || (member() && uid == request.auth.uid);
+      match /d/{day} { allow read, write: if isOwner() || (member() && uid == request.auth.uid); }
+    }
+    match /users/{uid} {
+      allow read: if member() || (signedIn() && uid == request.auth.uid);
+      allow write: if signedIn() && uid == request.auth.uid;
+    }
+  }
+}

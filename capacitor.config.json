@@ -1,0 +1,9 @@
+{
+  "appId": "uk.shopstock.manager",
+  "appName": "Shop Stock",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": { "insetsHandling": "css", "style": "LIGHT", "initialViewportFitValueHint": "cover" }
+  },
+  "android": { "backgroundColor": "#f4f6f8" }
+}

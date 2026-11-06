@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Shop Stock</string>
+    <string name="title_activity_main">Shop Stock</string>
+    <string name="package_name">uk.shopstock.manager</string>
+    <string name="custom_url_scheme">uk.shopstock.manager</string>
+</resources>

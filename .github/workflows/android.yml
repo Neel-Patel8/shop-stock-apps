@@ -1,0 +1,56 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Build the app files
+        run: npm run build && npx cap sync android
+
+      - name: Build the APK
+        working-directory: android
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: chmod +x gradlew && ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Name the file
+        run: cp android/app/build/outputs/apk/release/app-release.apk "ShopStock-${{ github.run_number }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ShopStock-${{ github.run_number }}
+          path: ShopStock-*.apk
+
+      - name: Publish as a download (Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Shop Stock — version 1.0.${{ github.run_number }}
+          body: Download the .apk file below on your Android phone and open it to install or update.
+          files: ShopStock-*.apk
+          make_latest: true
